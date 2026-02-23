@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class DocumentService {
                 .toList();
     }
 
-    public DocumentResponseDto getDocumentById(Long id) {
+    public DocumentResponseDto getDocumentById(UUID id) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Document", id));
         return documentMapper.toResponseDto(document);
@@ -41,7 +42,7 @@ public class DocumentService {
     }
 
     @Transactional
-    public DocumentResponseDto updateDocument(Long id, DocumentRequestDto requestDto) {
+    public DocumentResponseDto updateDocument(UUID id, DocumentRequestDto requestDto) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Document", id));
         documentMapper.updateEntityFromDto(requestDto, document);
@@ -50,7 +51,7 @@ public class DocumentService {
     }
 
     @Transactional
-    public void deleteDocument(Long id) {
+    public void deleteDocument(UUID id) {
         if (!documentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Document", id);
         }

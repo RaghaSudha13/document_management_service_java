@@ -1,12 +1,14 @@
 package com.document.management.exception;
 
+import java.util.UUID;
+
 public class ResourceNotFoundException extends RuntimeException {
 
     public ResourceNotFoundException(String message) {
         super(message);
     }
 
-    public ResourceNotFoundException(String resourceName, Long id) {
-        super(String.format("%s not found with id: %d", resourceName, id));
+    public ResourceNotFoundException(String resourceName, UUID id) {
+        super(String.format("%s not found with id: %s", resourceName, id));
     }
 }

@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -51,6 +52,8 @@ class DocumentControllerTest {
     private ObjectMapper objectMapper;
 
     private static final String BASE_URL = "/api/v1/documents";
+    private static final UUID DOC_ID = UUID.fromString("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    private static final UUID NON_EXISTENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000099");
 
     private DocumentResponseDto responseDto;
     private DocumentRequestDto requestDto;
@@ -58,7 +61,7 @@ class DocumentControllerTest {
     @BeforeEach
     void setUp() {
         responseDto = DocumentResponseDto.builder()
-                .id(1L)
+                .id(DOC_ID)
                 .name("Test Document")
                 .description("Test Description")
                 .createdAt(LocalDateTime.of(2026, 2, 23, 10, 0))
@@ -82,7 +85,7 @@ class DocumentControllerTest {
             mockMvc.perform(get(BASE_URL))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].id", is(1)))
+                    .andExpect(jsonPath("$[0].id", is(DOC_ID.toString())))
                     .andExpect(jsonPath("$[0].name", is("Test Document")));
         }
 
@@ -104,11 +107,11 @@ class DocumentControllerTest {
         @Test
         @DisplayName("should return 200 with document")
         void shouldReturnDocument() throws Exception {
-            when(documentService.getDocumentById(1L)).thenReturn(responseDto);
+            when(documentService.getDocumentById(DOC_ID)).thenReturn(responseDto);
 
-            mockMvc.perform(get(BASE_URL + "/1"))
+            mockMvc.perform(get(BASE_URL + "/" + DOC_ID))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id", is(1)))
+                    .andExpect(jsonPath("$.id", is(DOC_ID.toString())))
                     .andExpect(jsonPath("$.name", is("Test Document")))
                     .andExpect(jsonPath("$.description", is("Test Description")));
         }
@@ -116,13 +119,13 @@ class DocumentControllerTest {
         @Test
         @DisplayName("should return 404 when not found")
         void shouldReturn404WhenNotFound() throws Exception {
-            when(documentService.getDocumentById(99L))
-                    .thenThrow(new ResourceNotFoundException("Document", 99L));
+            when(documentService.getDocumentById(NON_EXISTENT_ID))
+                    .thenThrow(new ResourceNotFoundException("Document", NON_EXISTENT_ID));
 
-            mockMvc.perform(get(BASE_URL + "/99"))
+            mockMvc.perform(get(BASE_URL + "/" + NON_EXISTENT_ID))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status", is(404)))
-                    .andExpect(jsonPath("$.message", is("Document not found with id: 99")));
+                    .andExpect(jsonPath("$.message", is("Document not found with id: " + NON_EXISTENT_ID)));
         }
     }
 
@@ -139,7 +142,7 @@ class DocumentControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(requestDto)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.id", is(1)))
+                    .andExpect(jsonPath("$.id", is(DOC_ID.toString())))
                     .andExpect(jsonPath("$.name", is("Test Document")));
         }
 
@@ -180,12 +183,12 @@ class DocumentControllerTest {
         @DisplayName("should return 200 with updated document")
         void shouldUpdateDocument() throws Exception {
             DocumentResponseDto updatedResponse = DocumentResponseDto.builder()
-                    .id(1L)
+                    .id(DOC_ID)
                     .name("Updated Name")
                     .description("Updated Desc")
                     .createdAt(responseDto.getCreatedAt())
                     .build();
-            when(documentService.updateDocument(eq(1L), any(DocumentRequestDto.class)))
+            when(documentService.updateDocument(eq(DOC_ID), any(DocumentRequestDto.class)))
                     .thenReturn(updatedResponse);
 
             DocumentRequestDto updateDto = DocumentRequestDto.builder()
@@ -193,7 +196,7 @@ class DocumentControllerTest {
                     .description("Updated Desc")
                     .build();
 
-            mockMvc.perform(put(BASE_URL + "/1")
+            mockMvc.perform(put(BASE_URL + "/" + DOC_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateDto)))
                     .andExpect(status().isOk())
@@ -203,10 +206,10 @@ class DocumentControllerTest {
         @Test
         @DisplayName("should return 404 when not found")
         void shouldReturn404WhenNotFound() throws Exception {
-            when(documentService.updateDocument(eq(99L), any(DocumentRequestDto.class)))
-                    .thenThrow(new ResourceNotFoundException("Document", 99L));
+            when(documentService.updateDocument(eq(NON_EXISTENT_ID), any(DocumentRequestDto.class)))
+                    .thenThrow(new ResourceNotFoundException("Document", NON_EXISTENT_ID));
 
-            mockMvc.perform(put(BASE_URL + "/99")
+            mockMvc.perform(put(BASE_URL + "/" + NON_EXISTENT_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(requestDto)))
                     .andExpect(status().isNotFound());
@@ -219,7 +222,7 @@ class DocumentControllerTest {
                     .name("")
                     .build();
 
-            mockMvc.perform(put(BASE_URL + "/1")
+            mockMvc.perform(put(BASE_URL + "/" + DOC_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalid)))
                     .andExpect(status().isBadRequest());
@@ -233,21 +236,21 @@ class DocumentControllerTest {
         @Test
         @DisplayName("should return 204 when deleted")
         void shouldDeleteDocument() throws Exception {
-            doNothing().when(documentService).deleteDocument(1L);
+            doNothing().when(documentService).deleteDocument(DOC_ID);
 
-            mockMvc.perform(delete(BASE_URL + "/1"))
+            mockMvc.perform(delete(BASE_URL + "/" + DOC_ID))
                     .andExpect(status().isNoContent());
 
-            verify(documentService).deleteDocument(1L);
+            verify(documentService).deleteDocument(DOC_ID);
         }
 
         @Test
         @DisplayName("should return 404 when not found")
         void shouldReturn404WhenNotFound() throws Exception {
-            doThrow(new ResourceNotFoundException("Document", 99L))
-                    .when(documentService).deleteDocument(99L);
+            doThrow(new ResourceNotFoundException("Document", NON_EXISTENT_ID))
+                    .when(documentService).deleteDocument(NON_EXISTENT_ID);
 
-            mockMvc.perform(delete(BASE_URL + "/99"))
+            mockMvc.perform(delete(BASE_URL + "/" + NON_EXISTENT_ID))
                     .andExpect(status().isNotFound());
         }
     }

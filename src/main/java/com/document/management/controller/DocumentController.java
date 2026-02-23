@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/documents")
@@ -36,7 +37,7 @@ public class DocumentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get document by ID")
-    public ResponseEntity<DocumentResponseDto> getDocumentById(@PathVariable Long id) {
+    public ResponseEntity<DocumentResponseDto> getDocumentById(@PathVariable UUID id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
@@ -51,14 +52,14 @@ public class DocumentController {
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing document")
     public ResponseEntity<DocumentResponseDto> updateDocument(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody DocumentRequestDto requestDto) {
         return ResponseEntity.ok(documentService.updateDocument(id, requestDto));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a document")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable UUID id) {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
